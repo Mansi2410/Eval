@@ -1,0 +1,80 @@
+Create a tree structure in MySql table that could store the following tree structure:
+http://prnt.sc/wcbzth 
+
+
+1) Write a query to find the root node.
+
+SELECT
+    id, title
+FROM
+   gadgets
+WHERE
+    parent_id IS NULL;
+
+2) Write a query to find leaf node.
+
+SELECT
+    c1.id, c1.title
+FROM
+    gadgets c1
+        LEFT JOIN
+    gadgets c2 ON c2.parent_id = c1.id
+WHERE
+    c2.id IS NULL;
+
+3) Write a query to find non-leaf node.
+
+SELECT
+   DISTINCT( c1.id), c1.title
+FROM
+    gadgets c1
+        INNER JOIN
+    gadgets c2 ON c2.parent_id = c1.id
+WHERE
+    c2.id IS NOT NULL
+
+4) Write a query to find the path of each node. e.g. http://prnt.sc/wcc4bg
+
+WITH RECURSIVE gadgets_path (id, title, path) AS
+(
+  SELECT id, title, title as path
+    FROM gadgets
+    WHERE parent_id IS NULL
+  UNION ALL
+  SELECT c.id, c.title, CONCAT(cp.path, ' > ', c.title)
+    FROM gadgets_path AS cp JOIN gadgets AS c
+      ON cp.id = c.parent_id
+)
+SELECT * FROM gadgets_path
+ORDER BY path;
+
+5) Write a function to calculate node level. e.g. Electronics is at 0 level, Camera is on level 2 and iOs is on level 3.
+
+WITH RECURSIVE gadgets_path (id, title, lvl) AS
+(
+  SELECT id, title, 0 lvl
+    FROM gadgets
+    WHERE parent_id IS NULL
+  UNION ALL
+  SELECT c.id, c.title,cp.lvl + 1
+    FROM gadgets_path AS cp JOIN gadgets AS c
+      ON cp.id = c.parent_id
+)
+SELECT * FROM gadgets_path
+ORDER BY lvl;
+
+6) Write a procedure to get the immediate children.
+DELIMITER $$
+CREATE PROCEDURE immediate()
+BEGIN
+SELECT
+    id, title
+FROM
+    gadgets
+WHERE
+    parent_id = 1
+END$$
+DELIMITER;
+
+
+
